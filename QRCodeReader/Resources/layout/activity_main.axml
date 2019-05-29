@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.design.widget.CoordinatorLayout
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	xmlns:app="http://schemas.android.com/apk/res-auto"
+	xmlns:tools="http://schemas.android.com/tools"
+	android:layout_width="match_parent"
+	android:layout_height="match_parent"
+	android:foregroundGravity="center">
+	<LinearLayout
+		android:orientation="vertical"
+		android:minWidth="25px"
+		android:minHeight="25px"
+		android:layout_width="match_parent"
+		android:layout_height="match_parent">
+	<android.support.v7.widget.Toolbar xmlns:android="http://schemas.android.com/apk/res/android"
+		xmlns:app="http://schemas.android.com/apk/res-auto"
+		android:id="@+id/toolbar"
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:minHeight="?attr/actionBarSize"
+		android:background="?attr/colorPrimary"
+		app:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
+		app:popupTheme="@style/ThemeOverlay.AppCompat.Light" />
+	<LinearLayout
+		android:orientation="vertical"
+		android:minWidth="25px"
+		android:minHeight="25px"
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:gravity="center"
+		android:id="@+id/linearLayout1">		
+		<SurfaceView
+				android:id="@+id/cameraView"
+				android:layout_width="320dp"
+				android:layout_height="240dp"
+		/>
+		<TextView
+			android:gravity="center_horizontal"
+			android:id="@+id/txtResult"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:text="Por favor enfoque el código"
+			android:textSize="20sp"  />
+		<Button
+			android:text="Reintentar"
+			android:enabled="false"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:id="@+id/btnretry"
+			android:drawableLeft="@android:drawable/ic_popup_sync" />
+	</LinearLayout>  
+	</LinearLayout> 
+</android.support.design.widget.CoordinatorLayout> 
