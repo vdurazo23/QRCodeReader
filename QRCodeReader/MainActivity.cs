@@ -16,10 +16,12 @@ using System;
 using Plugin.Geolocator;
 using static Android.Gms.Vision.Detector;
 using Plugin.Geolocator.Abstractions;
+using Plugin.CurrentActivity;
+using System.Threading.Tasks;
 
 namespace QRCodeReader
 {
-    [Activity(Label = "@string/app_name", Theme = "@style/AppTheme.NoActionBar", MainLauncher = true)]
+    [Activity(Label = "@string/app_name", Theme = "@style/AppTheme.NoActionBar", MainLauncher = true, ScreenOrientation = Android.Content.PM.ScreenOrientation.Portrait)]
     public class MainActivity : AppCompatActivity, ISurfaceHolderCallback, IProcessor
     {
         SurfaceView surfaceView;
@@ -28,6 +30,7 @@ namespace QRCodeReader
         CameraSource cameraSource;
         Button BtnRetry;
         const int RequestCameraPermisionID = 1001;
+        Plugin.Geolocator.Abstractions.Position location;
         protected override void OnCreate(Bundle savedInstanceState)
         {
             base.OnCreate(savedInstanceState);
@@ -60,22 +63,58 @@ namespace QRCodeReader
             };
            
             Plugin.CurrentActivity.CrossCurrentActivity.Current.Init(this, savedInstanceState);
-
+           
             if (CheckSelfPermission(Manifest.Permission.AccessCoarseLocation) != (int)Permission.Granted)
             {
                 RequestPermissions(new string[] { Manifest.Permission.AccessCoarseLocation, Manifest.Permission.AccessFineLocation }, 0);
             }
-            StartGps();
+            //StartGps();            
+            task();
         }
-       
+
+        async Task task()
+        {
+            while (true)
+            {
+                Plugin.Geolocator.Abstractions.Position position = await CrossGeolocator.Current.GetPositionAsync(TimeSpan.FromSeconds(10));
+                var speed = position.Speed * 3.6;
+                RunOnUiThread(() =>
+                {
+                   
+                    if (location != null)
+                    {
+                        float[] result = new float[1];
+                        
+                        Android.Locations.Location.DistanceBetween(location.Latitude, location.Longitude, position.Latitude, position.Longitude,result);
+                        Console.Write("xxx {0}", result[0]);
+                        txtResult.Text = location.Latitude.ToString() + "\n" + location.Longitude.ToString() + "\n" + position.Latitude.ToString() + "\n" + position.Longitude.ToString() + "\n" + result[0].ToString();
+                    }
+                    else
+                    {
+                        location = position;                     
+                    }
+                });                    
+                await Task.Delay(1000);
+                
+            }
+        }
+
         private async void StartGps()
         {
+            if (!CrossGeolocator.IsSupported)
+            {
+                Console.Write("Not Supported");
+            }
+            Console.Write(CrossGeolocator.Current.IsGeolocationAvailable.ToString());
+            Console.Write(CrossGeolocator.Current.IsGeolocationEnabled.ToString());
+
             await CrossGeolocator.Current.StartListeningAsync(TimeSpan.FromSeconds(1), 0.1, false, null);
             CrossGeolocator.Current.PositionChanged += Current_PositionChanged;
         }
         private void Current_PositionChanged(object sender, PositionEventArgs e)
         {            
             Console.WriteLine("Lat: " + e.Position.Latitude + " Lon: " + e.Position.Longitude + " Acc: " + e.Position.Accuracy);
+            txtResult.Text = (e.Position.Speed*100).ToString("f2")  + "\n" + e.Position.Latitude.ToString() + "\n" + e.Position.Longitude.ToString();
         }
 
         async void getloc()
@@ -83,25 +122,25 @@ namespace QRCodeReader
             var locator = CrossGeolocator.Current;
             locator.DesiredAccuracy = 50.0;
 
-            await locator.StartListeningAsync(TimeSpan.FromSeconds(5), 10, true, new Plugin.Geolocator.Abstractions.ListenerSettings
-            {
-                ActivityType = Plugin.Geolocator.Abstractions.ActivityType.AutomotiveNavigation,
-                AllowBackgroundUpdates = true,
-                DeferLocationUpdates = true,
-                DeferralDistanceMeters = 1,
-                DeferralTime = TimeSpan.FromSeconds(1),
-                ListenForSignificantChanges = true,
-                PauseLocationUpdatesAutomatically = false
-            });           
+            //await locator.StartListeningAsync(TimeSpan.FromSeconds(5), 10, true, new Plugin.Geolocator.Abstractions.ListenerSettings
+            //{
+            //    ActivityType = Plugin.Geolocator.Abstractions.ActivityType.AutomotiveNavigation,
+            //    AllowBackgroundUpdates = true,
+            //    DeferLocationUpdates = true,
+            //    DeferralDistanceMeters = 1,
+            //    DeferralTime = TimeSpan.FromSeconds(1),
+            //    ListenForSignificantChanges = true,
+            //    PauseLocationUpdatesAutomatically = false
+            //});           
 
-            //Plugin.Geolocator.Abstractions.Position position = await locator.GetPositionAsync(TimeSpan.FromSeconds(10));
+            Plugin.Geolocator.Abstractions.Position position = await locator.GetPositionAsync(TimeSpan.FromSeconds(100));
 
-            locator.PositionChanged += Locator_PositionChanged;
-            locator.PositionError += Locator_PositionError; 
+            //locator.PositionChanged += Locator_PositionChanged;
+            //locator.PositionError += Locator_PositionError; 
 
-            //Console.Write("Position Status: {0}", position.Timestamp.ToString());
-            //Console.Write("Position Latitude: {0}", position.Latitude.ToString());
-            //Console.Write("Position Longitude: {0}", position.Longitude.ToString());
+            Console.Write("Position Status: {0}", position.Timestamp.ToString());
+            Console.Write("Position Latitude: {0}", position.Latitude.ToString());
+            Console.Write("Position Longitude: {0}", position.Longitude.ToString());
         }
 
         private void Locator_PositionError(object sender, PositionErrorEventArgs e)
